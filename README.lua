@@ -2,13 +2,13 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Painel Ultimate v3.2",
+    Title = "Painel Ultimate v3.3",
     TabWidth = 160,
-    Size = UDim2.fromOffset(640, 450),
+    Size = UDim2.fromOffset(640, 460),
     Theme = "Dark"
 })
 
--- Abas
+-- Criar abas
 local Tabs = {
     Player = Window:AddTab({ Title = "Player", Icon = "user" }),
     Troll = Window:AddTab({ Title = "Troll Pro", Icon = "alert-triangle" }),
@@ -17,7 +17,7 @@ local Tabs = {
     Creditos = Window:AddTab({ Title = "Créditos", Icon = "info" })
 }
 
-Fluent:Notify({ Title = "Painel", Content = "Painel Ultimate v3.2 iniciado com sucesso!" })
+Fluent:Notify({ Title = "Painel", Content = "Painel Ultimate v3.3 iniciado!" })
 
 local player = game.Players.LocalPlayer
 local Players = game:GetService("Players")
@@ -32,54 +32,44 @@ end
 local function updatePlayerList()
     local names = {}
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player then
-            table.insert(names, plr.Name)
-        end
+        if plr ~= player then table.insert(names, plr.Name) end
     end
     return names
 end
 
 ---------------------------------------------------
--- PODERES AVANÇADOS - PLAYER
+-- PLAYER
 ---------------------------------------------------
 local SuperForca = false
 local SelectedPlayer = ""
 
--- Dropdown para teleport
+-- Dropdown
 local DropdownPlayers = Tabs.Player:AddDropdown("PlayersDropdown", {
     Title = "Selecionar Jogador",
     Values = updatePlayerList(),
     Default = 1,
     Multi = false
 })
-DropdownPlayers:OnChanged(function(value)
-    SelectedPlayer = value
-end)
+DropdownPlayers:OnChanged(function(value) SelectedPlayer = value end)
 
--- Sliders básicos
+-- Sliders
 Tabs.Player:AddSlider("Velocidade", {
     Title = "Velocidade",
     Default = 16, Min = 0, Max = 100,
-    Callback = function(val)
-        if getHumanoid() then getHumanoid().WalkSpeed = val end
-    end
+    Callback = function(val) if getHumanoid() then getHumanoid().WalkSpeed = val end end
 })
 Tabs.Player:AddSlider("Pulo", {
     Title = "Pulo",
     Default = 50, Min = 0, Max = 200,
-    Callback = function(val)
-        if getHumanoid() then getHumanoid().JumpPower = val end
-    end
+    Callback = function(val) if getHumanoid() then getHumanoid().JumpPower = val end end
 })
 Tabs.Player:AddSlider("Gravidade", {
     Title = "Gravidade",
     Default = 196.2, Min = 0, Max = 400,
-    Callback = function(val)
-        workspace.Gravity = val
-    end
+    Callback = function(val) workspace.Gravity = val end
 })
 
--- Botões de poderes
+-- Poderes
 Tabs.Player:AddButton({
     Title = "Teleport até Jogador",
     Callback = function()
@@ -87,60 +77,10 @@ Tabs.Player:AddButton({
         if target and target.Character and player.Character then
             local hrp = player.Character:FindFirstChild("HumanoidRootPart")
             local thrp = target.Character:FindFirstChild("HumanoidRootPart")
-            if hrp and thrp then
-                hrp.CFrame = thrp.CFrame + Vector3.new(0, 3, 0)
-            end
+            if hrp and thrp then hrp.CFrame = thrp.CFrame + Vector3.new(0, 3, 0) end
         else
             Fluent:Notify({ Title = "Teleport", Content = "Selecione um jogador válido!" })
         end
-    end
-})
-
-Tabs.Player:AddButton({
-    Title = "Virar Gigante",
-    Callback = function()
-        if getHumanoid() and player.Character:FindFirstChild("HumanoidRootPart") then
-            for _, scale in pairs(player.Character:GetDescendants()) do
-                if scale:IsA("NumberValue") and scale.Name:find("Scale") then
-                    scale.Value = 3
-                end
-            end
-        end
-    end
-})
-
-Tabs.Player:AddButton({
-    Title = "Virar Minúsculo",
-    Callback = function()
-        if getHumanoid() and player.Character:FindFirstChild("HumanoidRootPart") then
-            for _, scale in pairs(player.Character:GetDescendants()) do
-                if scale:IsA("NumberValue") and scale.Name:find("Scale") then
-                    scale.Value = 0.5
-                end
-            end
-        end
-    end
-})
-
-Tabs.Player:AddButton({
-    Title = "Resetar Tamanho",
-    Callback = function()
-        if getHumanoid() and player.Character:FindFirstChild("HumanoidRootPart") then
-            for _, scale in pairs(player.Character:GetDescendants()) do
-                if scale:IsA("NumberValue") and scale.Name:find("Scale") then
-                    scale.Value = 1
-                end
-            end
-        end
-    end
-})
-
-Tabs.Player:AddToggle("SuperForca", {
-    Title = "Super Força",
-    Default = false,
-    Callback = function(state)
-        SuperForca = state
-        Fluent:Notify({ Title = "Player", Content = state and "Dano triplicado!" or "Dano normal." })
     end
 })
 
@@ -157,9 +97,29 @@ Tabs.Player:AddButton({
     end
 })
 
----------------------------------------------------
--- ARMAS RÁPIDAS
----------------------------------------------------
+Tabs.Player:AddToggle("SuperForca", {
+    Title = "Super Força",
+    Default = false,
+    Callback = function(state)
+        SuperForca = state
+        Fluent:Notify({ Title = "Player", Content = state and "Dano triplicado!" or "Dano normal." })
+    end
+})
+
+-- Tamanho
+local function setSize(scale)
+    if getHumanoid() and player.Character then
+        for _, s in pairs(player.Character:GetDescendants()) do
+            if s:IsA("NumberValue") and s.Name:find("Scale") then s.Value = scale end
+        end
+    end
+end
+
+Tabs.Player:AddButton({ Title = "Gigante", Callback = function() setSize(3) end })
+Tabs.Player:AddButton({ Title = "Minúsculo", Callback = function() setSize(0.5) end })
+Tabs.Player:AddButton({ Title = "Resetar Tamanho", Callback = function() setSize(1) end })
+
+-- Armas
 local function createWeapon(name, size, damage)
     local tool = Instance.new("Tool")
     tool.Name = name
@@ -189,6 +149,62 @@ Tabs.Player:AddButton({
         Fluent:Notify({ Title = "Armas", Content = "Todas as armas adicionadas!" })
     end
 })
+
+---------------------------------------------------
+-- TROLL PRO
+---------------------------------------------------
+local JumpscareID = "rbxassetid://6754147732"
+
+local function jumpscareAll()
+    for _, plr in pairs(Players:GetPlayers()) do
+        local gui = Instance.new("ScreenGui")
+        gui.IgnoreGuiInset = true
+        gui.ResetOnSpawn = false
+        local img = Instance.new("ImageLabel")
+        img.Size = UDim2.new(1, 0, 1, 0)
+        img.BackgroundTransparency = 1
+        img.Image = JumpscareID
+        img.Parent = gui
+        gui.Parent = plr:WaitForChild("PlayerGui")
+        task.delay(1.5, function() gui:Destroy() end)
+    end
+end
+
+local function explodeAll()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local exp = Instance.new("Explosion")
+            exp.BlastRadius = 10
+            exp.Position = plr.Character.HumanoidRootPart.Position
+            exp.Parent = workspace
+        end
+    end
+end
+
+local function rainBlocks()
+    for i = 1, 20 do
+        local part = Instance.new("Part")
+        part.Size = Vector3.new(3, 3, 3)
+        part.Position = player.Character.HumanoidRootPart.Position + Vector3.new(math.random(-30, 30), 50, math.random(-30, 30))
+        part.Color = Color3.fromRGB(math.random(0, 255), math.random(0, 255), math.random(0, 255))
+        part.Anchored = false
+        part.Parent = workspace
+        game.Debris:AddItem(part, 10)
+        task.wait(0.15)
+    end
+end
+
+local function modeCaos()
+    Fluent:Notify({ Title = "Caos", Content = "Modo Caos ativado!" })
+    task.spawn(jumpscareAll)
+    task.spawn(explodeAll)
+    task.spawn(rainBlocks)
+end
+
+Tabs.Troll:AddButton({ Title = "Jumpscare em TODOS", Callback = jumpscareAll })
+Tabs.Troll:AddButton({ Title = "Explodir TODOS", Callback = explodeAll })
+Tabs.Troll:AddButton({ Title = "Chuva de Blocos", Callback = rainBlocks })
+Tabs.Troll:AddButton({ Title = "Ativar Modo Caos", Callback = modeCaos })
 
 ---------------------------------------------------
 -- VISUAL (ESP)
@@ -230,7 +246,7 @@ local function installHDAdmin()
         local model = game:GetObjects("rbxassetid://3239236979")[1]
         if model then
             model.Parent = workspace
-            Fluent:Notify({ Title = "Admin", Content = "HD Admin instalado no jogo!" })
+            Fluent:Notify({ Title = "Admin", Content = "HD Admin instalado!" })
         else
             Fluent:Notify({ Title = "Erro", Content = "Falha ao carregar o HD Admin." })
         end
@@ -242,7 +258,7 @@ local function forceAdmin()
     local hd = game:GetService("ReplicatedStorage"):FindFirstChild("HDAdmin")
     if hd and hd.Signals and hd.Signals:FindFirstChild("RequestCommand") then
         hd.Signals.RequestCommand:FireServer("setrank me owner")
-        Fluent:Notify({ Title = "Admin", Content = "Você foi promovido a Owner no HD Admin!" })
+        Fluent:Notify({ Title = "Admin", Content = "Você foi promovido a Owner!" })
     else
         Fluent:Notify({ Title = "Erro", Content = "HD Admin não está instalado." })
     end
@@ -255,8 +271,8 @@ Tabs.Admin:AddButton({ Title = "Forçar Owner (HD Admin)", Callback = forceAdmin
 -- CRÉDITOS
 ---------------------------------------------------
 Tabs.Creditos:AddParagraph({
-    Title = "Painel Ultimate v3.2",
-    Content = "Agora com poderes avançados, teleport e todas as armas."
+    Title = "Painel Ultimate v3.3",
+    Content = "Base modular estável, com Troll Pro, ESP e Admin."
 })
 
 Window:SelectTab(1)
