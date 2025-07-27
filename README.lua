@@ -2,44 +2,179 @@
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 
 local Window = Fluent:CreateWindow({
-    Title = "Painel Ultimate v3.0",
+    Title = "Painel Ultimate v3.1",
     TabWidth = 160,
-    Size = UDim2.fromOffset(670, 500),
+    Size = UDim2.fromOffset(620, 420),
     Theme = "Dark"
 })
 
--- Abas
+-- Abas principais
 local Tabs = {
     Player = Window:AddTab({ Title = "Player", Icon = "user" }),
-    Armas = Window:AddTab({ Title = "Armas", Icon = "sword" }),
-    Troll = Window:AddTab({ Title = "Troll", Icon = "alert-triangle" }),
+    Troll = Window:AddTab({ Title = "Troll Pro", Icon = "alert-triangle" }),
     Visual = Window:AddTab({ Title = "Visual", Icon = "eye" }),
     Admin = Window:AddTab({ Title = "Admin", Icon = "shield" }),
     Creditos = Window:AddTab({ Title = "Créditos", Icon = "info" })
 }
 
+Fluent:Notify({ Title = "Painel", Content = "Painel Ultimate v3.1 iniciado com sucesso!" })
+
 local player = game.Players.LocalPlayer
 local Players = game:GetService("Players")
 
 ---------------------------------------------------
--- FUNÇÕES GERAIS
+-- FUNÇÕES AUXILIARES
 ---------------------------------------------------
 local function getHumanoid()
     return player.Character and player.Character:FindFirstChild("Humanoid")
 end
 
-local function updatePlayerList()
-    local names = {}
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= player then
-            table.insert(names, plr.Name)
+---------------------------------------------------
+-- PLAYER
+---------------------------------------------------
+Tabs.Player:AddSlider("Velocidade", {
+    Title = "Velocidade",
+    Default = 16,
+    Min = 0,
+    Max = 100,
+    Callback = function(value)
+        if getHumanoid() then
+            getHumanoid().WalkSpeed = value
         end
     end
-    return names
-end
+})
+
+Tabs.Player:AddSlider("Pulo", {
+    Title = "Força do Pulo",
+    Default = 50,
+    Min = 0,
+    Max = 200,
+    Callback = function(value)
+        if getHumanoid() then
+            getHumanoid().JumpPower = value
+        end
+    end
+})
+
+Tabs.Player:AddSlider("Gravidade", {
+    Title = "Gravidade",
+    Default = 196.2,
+    Min = 0,
+    Max = 400,
+    Callback = function(value)
+        workspace.Gravity = value
+    end
+})
+
+Tabs.Player:AddButton({
+    Title = "Resetar Personagem",
+    Callback = function()
+        if player.Character then
+            player.Character:BreakJoints()
+        end
+    end
+})
+
+Tabs.Player:AddButton({
+    Title = "Invisibilidade",
+    Callback = function()
+        local char = player.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Transparency = part.Transparency == 0 and 0.7 or 0
+                end
+            end
+        end
+    end
+})
 
 ---------------------------------------------------
--- ABA ADMIN
+-- TROLL PRO
+---------------------------------------------------
+local JumpscareID = "rbxassetid://6754147732"
+
+local function jumpscareAll()
+    for _, plr in pairs(Players:GetPlayers()) do
+        local gui = Instance.new("ScreenGui")
+        gui.IgnoreGuiInset = true
+        gui.ResetOnSpawn = false
+        local img = Instance.new("ImageLabel")
+        img.Size = UDim2.new(1, 0, 1, 0)
+        img.BackgroundTransparency = 1
+        img.Image = JumpscareID
+        img.Parent = gui
+        gui.Parent = plr:WaitForChild("PlayerGui")
+        task.delay(1.5, function()
+            gui:Destroy()
+        end)
+    end
+end
+
+local function explodeAll()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local exp = Instance.new("Explosion")
+            exp.BlastRadius = 10
+            exp.Position = plr.Character.HumanoidRootPart.Position
+            exp.Parent = workspace
+        end
+    end
+end
+
+local function freezeAll()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            plr.Character.HumanoidRootPart.Anchored = true
+        end
+    end
+    Fluent:Notify({ Title = "Troll", Content = "Todos os jogadores foram presos no ar!" })
+end
+
+local function modeCaos()
+    Fluent:Notify({ Title = "Modo Caos", Content = "Caos ativado em todos os jogadores!" })
+    task.spawn(jumpscareAll)
+    task.spawn(explodeAll)
+    task.spawn(freezeAll)
+end
+
+Tabs.Troll:AddButton({ Title = "Jumpscare em TODOS", Callback = jumpscareAll })
+Tabs.Troll:AddButton({ Title = "Explodir TODOS", Callback = explodeAll })
+Tabs.Troll:AddButton({ Title = "Prender TODOS", Callback = freezeAll })
+Tabs.Troll:AddButton({ Title = "Ativar Modo Caos", Callback = modeCaos })
+
+---------------------------------------------------
+-- VISUAL
+---------------------------------------------------
+local ESPEnabled = false
+
+Tabs.Visual:AddToggle("ESP", {
+    Title = "Ativar ESP",
+    Default = false,
+    Callback = function(state)
+        ESPEnabled = state
+        for _, plr in pairs(Players:GetPlayers()) do
+            if plr ~= player and plr.Character then
+                for _, part in ipairs(plr.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        if state and not part:FindFirstChild("ESPHighlight") then
+                            local highlight = Instance.new("Highlight")
+                            highlight.Name = "ESPHighlight"
+                            highlight.FillColor = Color3.fromRGB(255, 255, 0)
+                            highlight.FillTransparency = 0.5
+                            highlight.Parent = part
+                        elseif not state and part:FindFirstChild("ESPHighlight") then
+                            part.ESPHighlight:Destroy()
+                        end
+                    end
+                end
+            end
+        end
+    end
+})
+
+---------------------------------------------------
+-- ADMIN
 ---------------------------------------------------
 local function installHDAdmin()
     local success, err = pcall(function()
@@ -68,195 +203,11 @@ Tabs.Admin:AddButton({ Title = "Instalar HD Admin", Callback = installHDAdmin })
 Tabs.Admin:AddButton({ Title = "Forçar Owner (HD Admin)", Callback = forceAdmin })
 
 ---------------------------------------------------
--- ABA PLAYER – PODERES NORMAIS
----------------------------------------------------
-local AdminMode = false -- alterna entre modo normal e HD admin
-
-Tabs.Player:AddToggle("AdminMode", {
-    Title = "Ativar Modo Admin Powers",
-    Default = false,
-    Callback = function(state)
-        AdminMode = state
-        Fluent:Notify({
-            Title = "Player",
-            Content = state and "Usando comandos HD Admin." or "Usando poderes normais."
-        })
-    end
-})
-
--- Invisibilidade
-Tabs.Player:AddButton({
-    Title = "Invisibilidade",
-    Callback = function()
-        if AdminMode then
-            game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":invisible me")
-        else
-            local char = player.Character
-            if char then
-                for _, part in ipairs(char:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        part.Transparency = part.Transparency == 0 and 0.7 or 0
-                    end
-                end
-            end
-        end
-    end
-})
-
--- Super força
-local SuperForca = false
-Tabs.Player:AddToggle("SuperForca", {
-    Title = "Super Força",
-    Default = false,
-    Callback = function(state)
-        SuperForca = state
-        Fluent:Notify({ Title = "Player", Content = state and "Dano triplicado!" or "Dano normal." })
-    end
-})
-
--- Sliders
-Tabs.Player:AddSlider("Velocidade", {
-    Title = "Velocidade",
-    Default = 16, Min = 0, Max = 100,
-    Callback = function(val)
-        if AdminMode then
-            game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":speed me " .. val)
-        elseif getHumanoid() then
-            getHumanoid().WalkSpeed = val
-        end
-    end
-})
-
-Tabs.Player:AddSlider("JumpPower", {
-    Title = "Pulo",
-    Default = 50, Min = 0, Max = 200,
-    Callback = function(val)
-        if AdminMode then
-            game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":jumpPower me " .. val)
-        elseif getHumanoid() then
-            getHumanoid().JumpPower = val
-        end
-    end
-})
-
--- Teleport
-local SelectedPlayer = ""
-local DropdownPlayers = Tabs.Player:AddDropdown("PlayersDropdown", {
-    Title = "Selecionar Jogador",
-    Values = updatePlayerList(),
-    Default = 1,
-    Multi = false
-})
-DropdownPlayers:OnChanged(function(val)
-    SelectedPlayer = val
-end)
-
-Tabs.Player:AddButton({
-    Title = "Teleport até Jogador",
-    Callback = function()
-        local target = Players:FindFirstChild(SelectedPlayer)
-        if target and target.Character and player.Character then
-            local myHRP = player.Character:FindFirstChild("HumanoidRootPart")
-            local tgtHRP = target.Character:FindFirstChild("HumanoidRootPart")
-            if myHRP and tgtHRP then
-                if AdminMode then
-                    game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":tp me " .. target.Name)
-                else
-                    myHRP.CFrame = tgtHRP.CFrame + Vector3.new(0, 3, 0)
-                end
-            end
-        end
-    end
-})
-
--- Tamanho
-Tabs.Player:AddButton({
-    Title = "Virar Gigante",
-    Callback = function()
-        if AdminMode then
-            game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":size me 10")
-        elseif getHumanoid() then
-            player.Character.Humanoid.BodyHeightScale.Value = 3
-            player.Character.Humanoid.BodyWidthScale.Value = 3
-            player.Character.Humanoid.BodyDepthScale.Value = 3
-        end
-    end
-})
-
-Tabs.Player:AddButton({
-    Title = "Virar Minúsculo",
-    Callback = function()
-        if AdminMode then
-            game.ReplicatedStorage.HDAdmin.Signals.RequestCommand:FireServer(":size me 0.5")
-        elseif getHumanoid() then
-            player.Character.Humanoid.BodyHeightScale.Value = 0.5
-            player.Character.Humanoid.BodyWidthScale.Value = 0.5
-            player.Character.Humanoid.BodyDepthScale.Value = 0.5
-        end
-    end
-})
-
----------------------------------------------------
--- ESP (ABA VISUAL)
----------------------------------------------------
-local ESPEnabled = false
-Tabs.Visual:AddToggle("ESP", {
-    Title = "Ativar ESP",
-    Default = false,
-    Callback = function(state)
-        ESPEnabled = state
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character then
-                for _, part in ipairs(plr.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        if state and not part:FindFirstChild("ESPHighlight") then
-                            local h = Instance.new("Highlight")
-                            h.Name = "ESPHighlight"
-                            h.FillColor = Color3.fromRGB(255, 255, 0)
-                            h.Parent = part
-                        elseif not state and part:FindFirstChild("ESPHighlight") then
-                            part.ESPHighlight:Destroy()
-                        end
-                    end
-                end
-            end
-        end
-    end
-})
-
----------------------------------------------------
--- ARMAS (com dano ajustável)
----------------------------------------------------
-local function createMelee(name, size, baseDamage)
-    local tool = Instance.new("Tool")
-    tool.Name = name
-    tool.RequiresHandle = true
-    local handle = Instance.new("Part")
-    handle.Name = "Handle"
-    handle.Size = size
-    handle.Color = Color3.fromRGB(120, 120, 120)
-    handle.Parent = tool
-    tool.Activated:Connect(function()
-        handle.Touched:Connect(function(hit)
-            local hum = hit.Parent:FindFirstChild("Humanoid")
-            if hum and hum ~= getHumanoid() then
-                local dmg = SuperForca and baseDamage * 3 or baseDamage
-                hum:TakeDamage(dmg)
-            end
-        end)
-    end)
-    tool.Parent = player.Backpack
-end
-
-Tabs.Armas:AddButton({ Title = "Espada", Callback = function() createMelee("Espada", Vector3.new(1, 4, 1), 20) end })
-Tabs.Armas:AddButton({ Title = "Faca", Callback = function() createMelee("Faca", Vector3.new(1, 2, 0.5), 15) end })
-
----------------------------------------------------
 -- CRÉDITOS
 ---------------------------------------------------
 Tabs.Creditos:AddParagraph({
-    Title = "Painel Ultimate v3.0",
-    Content = "HD Admin + Poderes + Troll + ESP. Código revisado e otimizado."
+    Title = "Painel Ultimate v3.1",
+    Content = "Base estável com Troll Pro, ESP e Admin."
 })
 
 Window:SelectTab(1)
